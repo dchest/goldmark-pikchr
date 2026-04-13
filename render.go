@@ -44,7 +44,7 @@ func (r *Renderer) Render(w util.BufWriter, src []byte, node ast.Node, entering 
 	n := node.(*Block)
 	if entering {
 		toggle := r.ToggleDefault
-		limitWidth := true
+		limitWidth := r.LimitWidthDefault
 
 		var info []byte
 		if n.Info != nil {
