@@ -2,6 +2,7 @@ package pikchr
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/gopikchr/gopikchr"
@@ -28,7 +29,7 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 }
 
 func convertToDataURI(svg string) string {
-	return "data:image/svg+xml;base64," + string(util.URLEscape([]byte(svg), false))
+	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(svg))
 }
 
 func (r *Renderer) renderImage(w util.BufWriter, svg string, index int, limitWidth bool, width int) {
