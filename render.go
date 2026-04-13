@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"html"
 
 	"github.com/gopikchr/gopikchr"
 	"github.com/yuin/goldmark/ast"
@@ -92,7 +93,7 @@ func (r *Renderer) Render(w util.BufWriter, src []byte, node ast.Node, entering 
 				fmt.Fprintf(w, "<pre class='hidden'>\n")
 				for i := 0; i < lines.Len(); i++ {
 					line := lines.At(i)
-					w.Write(line.Value(src))
+					w.WriteString(html.EscapeString(string(line.Value(src))))
 				}
 				fmt.Fprintf(w, "</pre>\n")
 			}
