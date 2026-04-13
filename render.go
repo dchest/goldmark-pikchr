@@ -28,18 +28,15 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ScriptKind, r.RenderScript)
 }
 
-func convertToDataURI(svg string) string {
-	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(svg))
-}
-
-func (r *Renderer) renderImage(w util.BufWriter, svg string, index int, limitWidth bool, width int) {
-	fmt.Fprintf(w, "<img id='pikchr-%d' class='pikchr'", index)
+// renderImage renders the given SVG as an image with a data URI.
+func (r *Renderer) renderImage(w util.BufWriter, svg string, limitWidth bool, width int) {
+	fmt.Fprintf(w, "<img class='pikchr-img' src='data:image/svg+xml;base64,")
+	w.WriteString(base64.StdEncoding.EncodeToString([]byte(svg)))
+	w.WriteString("'")
 	if limitWidth {
-		fmt.Fprintf(w, " style='max-width:%dpx'", width)
+		fmt.Fprintf(w, " width='%d'", width)
 	}
-	fmt.Fprintf(w, " src='")
-	w.WriteString(convertToDataURI(svg))
-	fmt.Fprintf(w, "'>\n")
+	fmt.Fprintf(w, " alt=''>\n")
 }
 
 // Render renders pikchr.Block nodes.
@@ -75,17 +72,17 @@ func (r *Renderer) Render(w util.BufWriter, src []byte, node ast.Node, entering 
 
 		zOut, width, _, err := gopikchr.Convert(buf.String())
 
-		if r.DataURI {
-			r.renderImage(w, zOut, n.index, limitWidth, width)
-		} else {
-			fmt.Fprintf(w, "<div id='pikchr-%d' class='pikchr'", n.index)
-			if toggle {
-				if n.showToggleScript != nil {
-					*n.showToggleScript = true
-				}
-				fmt.Fprintf(w, " onclick=\"toggleHidden('pikchr-%d')\"", n.index)
+		fmt.Fprintf(w, "<div id='pikchr-%d' class='pikchr'", n.index)
+		if toggle && !r.DataURI {
+			if n.showToggleScript != nil {
+				*n.showToggleScript = true
 			}
-			w.WriteString(">\n")
+			fmt.Fprintf(w, " onclick=\"toggleHidden('pikchr-%d')\"", n.index)
+		}
+		w.WriteString(">\n")
+		if r.DataURI && err == nil {
+			r.renderImage(w, zOut, limitWidth, width)
+		} else {
 			if limitWidth && err == nil {
 				fmt.Fprintf(w, "<div class='pikchr-svg' style='max-width:%dpx'>\n%s</div>\n", width, zOut)
 			} else {
@@ -99,8 +96,8 @@ func (r *Renderer) Render(w util.BufWriter, src []byte, node ast.Node, entering 
 				}
 				fmt.Fprintf(w, "</pre>\n")
 			}
-			w.WriteString("</div>\n")
 		}
+		w.WriteString("</div>\n")
 	}
 	return ast.WalkContinue, nil
 }
