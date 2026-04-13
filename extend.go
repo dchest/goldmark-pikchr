@@ -35,7 +35,7 @@ func (e *Extender) Extend(md goldmark.Markdown) {
 	md.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
 			util.Prioritized(
-				&Renderer{ToggleDefault: e.ToggleDefault, LimitWidthDefault: e.LimitWidthDefault}, 100),
+				&Renderer{ToggleDefault: e.ToggleDefault, LimitWidthDefault: e.LimitWidthDefault, DataURI: e.DataURI}, 100),
 		),
 	)
 }
