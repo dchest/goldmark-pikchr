@@ -21,6 +21,7 @@ import (
 type Extender struct {
 	ToggleDefault     bool // If true, turn toggling on by default
 	LimitWidthDefault bool // If true, turn limitwidth on by default
+	DataURI           bool // If true, render img with data URI instead of SVG elements
 }
 
 // Extend extends the provided Goldmark parser with support for Pikchr

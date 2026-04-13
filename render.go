@@ -17,6 +17,7 @@ var limitWidthAttrName = []byte("limitwidth")
 type Renderer struct {
 	ToggleDefault     bool // If true, turn toggling on by default
 	LimitWidthDefault bool // If true, turn limitwidth on by default
+	DataURI           bool // If true, render img with data URI instead of SVG elements
 }
 
 // RegisterFuncs registers the renderer for Pikchr blocks with the provided
@@ -24,6 +25,20 @@ type Renderer struct {
 func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(Kind, r.Render)
 	reg.Register(ScriptKind, r.RenderScript)
+}
+
+func convertToDataURI(svg string) string {
+	return "data:image/svg+xml;base64," + string(util.URLEscape([]byte(svg), false))
+}
+
+func (r *Renderer) renderImage(w util.BufWriter, svg string, index int, limitWidth bool, width int) {
+	fmt.Fprintf(w, "<img id='pikchr-%d' class='pikchr'", index)
+	if limitWidth {
+		fmt.Fprintf(w, " style='max-width:%dpx'", width)
+	}
+	fmt.Fprintf(w, " src='")
+	w.WriteString(convertToDataURI(svg))
+	fmt.Fprintf(w, "'>\n")
 }
 
 // Render renders pikchr.Block nodes.
@@ -50,14 +65,6 @@ func (r *Renderer) Render(w util.BufWriter, src []byte, node ast.Node, entering 
 				}
 			}
 		}
-		fmt.Fprintf(w, "<div id='pikchr-%d' class='pikchr'", n.index)
-		if toggle {
-			if n.showToggleScript != nil {
-				*n.showToggleScript = true
-			}
-			fmt.Fprintf(w, " onclick=\"toggleHidden('pikchr-%d')\"", n.index)
-		}
-		w.WriteString(">\n")
 		lines := n.Lines()
 		var buf bytes.Buffer
 		for i := 0; i < lines.Len(); i++ {
@@ -66,20 +73,33 @@ func (r *Renderer) Render(w util.BufWriter, src []byte, node ast.Node, entering 
 		}
 
 		zOut, width, _, err := gopikchr.Convert(buf.String())
-		if limitWidth && err == nil {
-			fmt.Fprintf(w, "<div class='pikchr-svg' style='max-width:%dpx'>\n%s</div>\n", width, zOut)
+
+		if r.DataURI {
+			r.renderImage(w, zOut, n.index, limitWidth, width)
 		} else {
-			fmt.Fprintf(w, "<div>\n%s</div>\n", zOut)
-		}
-		if toggle {
-			fmt.Fprintf(w, "<pre class='hidden'>\n")
-			for i := 0; i < lines.Len(); i++ {
-				line := lines.At(i)
-				w.Write(line.Value(src))
+			fmt.Fprintf(w, "<div id='pikchr-%d' class='pikchr'", n.index)
+			if toggle {
+				if n.showToggleScript != nil {
+					*n.showToggleScript = true
+				}
+				fmt.Fprintf(w, " onclick=\"toggleHidden('pikchr-%d')\"", n.index)
 			}
-			fmt.Fprintf(w, "</pre>\n")
+			w.WriteString(">\n")
+			if limitWidth && err == nil {
+				fmt.Fprintf(w, "<div class='pikchr-svg' style='max-width:%dpx'>\n%s</div>\n", width, zOut)
+			} else {
+				fmt.Fprintf(w, "<div>\n%s</div>\n", zOut)
+			}
+			if toggle {
+				fmt.Fprintf(w, "<pre class='hidden'>\n")
+				for i := 0; i < lines.Len(); i++ {
+					line := lines.At(i)
+					w.Write(line.Value(src))
+				}
+				fmt.Fprintf(w, "</pre>\n")
+			}
+			w.WriteString("</div>\n")
 		}
-		w.WriteString("</div>\n")
 	}
 	return ast.WalkContinue, nil
 }
