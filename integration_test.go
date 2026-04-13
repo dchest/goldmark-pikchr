@@ -12,7 +12,7 @@ func TestIntegration(t *testing.T) {
 	t.Parallel()
 
 	testutil.DoTestCaseFile(
-		goldmark.New(goldmark.WithExtensions(&pikchr.Extender{})),
+		goldmark.New(goldmark.WithExtensions(&pikchr.Extender{LimitWidthDefault: true})),
 		"testdata/tests.txt",
 		t,
 	)

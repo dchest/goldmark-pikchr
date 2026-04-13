@@ -29,17 +29,6 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ScriptKind, r.RenderScript)
 }
 
-// renderImage renders the given SVG as an image with a data URI.
-func (r *Renderer) renderImage(w util.BufWriter, svg string, limitWidth bool, width int) {
-	fmt.Fprintf(w, "<img class='pikchr-img' src='data:image/svg+xml;base64,")
-	w.WriteString(base64.StdEncoding.EncodeToString([]byte(svg)))
-	w.WriteString("'")
-	if limitWidth {
-		fmt.Fprintf(w, " width='%d'", width)
-	}
-	fmt.Fprintf(w, " alt=''>\n")
-}
-
 // Render renders pikchr.Block nodes.
 func (r *Renderer) Render(w util.BufWriter, src []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	n := node.(*Block)
@@ -82,8 +71,22 @@ func (r *Renderer) Render(w util.BufWriter, src []byte, node ast.Node, entering 
 		}
 		w.WriteString(">\n")
 		if r.DataURI && err == nil {
-			r.renderImage(w, zOut, limitWidth, width)
+			// Render IMG
+			fmt.Fprintf(w, "<img class='pikchr-img' src='data:image/svg+xml;base64,")
+			w.WriteString(base64.StdEncoding.EncodeToString([]byte(zOut)))
+			w.WriteString("'")
+			if limitWidth {
+				fmt.Fprintf(w, " width='%d'", width)
+			}
+			fmt.Fprintf(w, " alt='")
+			for i := 0; i < lines.Len(); i++ {
+				line := lines.At(i)
+				w.WriteString(html.EscapeString(string(line.Value(src))))
+			}
+			fmt.Fprintf(w, "'>\n")
+
 		} else {
+			// Render SVG
 			if limitWidth && err == nil {
 				fmt.Fprintf(w, "<div class='pikchr-svg' style='max-width:%dpx'>\n%s</div>\n", width, zOut)
 			} else {

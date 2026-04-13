@@ -122,8 +122,8 @@ box color red wid 2.6in \
 </div>
 <pre class='hidden'>
 box color red wid 2.6in \
-    "Click on any diagram on this page" big \
-    "to see the Pikchr source text" big
+    &#34;Click on any diagram on this page&#34; big \
+    &#34;to see the Pikchr source text&#34; big
 </pre>
 </div>
 <script>

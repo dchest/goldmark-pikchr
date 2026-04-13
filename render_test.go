@@ -46,7 +46,7 @@ func TestRenderer_Block(t *testing.T) {
 
 			r := renderer.NewRenderer(
 				renderer.WithNodeRenderers(
-					util.Prioritized(&Renderer{}, 100),
+					util.Prioritized(&Renderer{LimitWidthDefault: true}, 100),
 				),
 			)
 
@@ -83,7 +83,7 @@ func TestRenderer_Script_Toggle(t *testing.T) {
 </script>`
 	r := renderer.NewRenderer(
 		renderer.WithNodeRenderers(
-			util.Prioritized(&Renderer{}, 100),
+			util.Prioritized(&Renderer{LimitWidthDefault: true}, 100),
 		),
 	)
 
@@ -99,7 +99,7 @@ func TestRenderer_Script_No_Toggle(t *testing.T) {
 	want := ""
 	r := renderer.NewRenderer(
 		renderer.WithNodeRenderers(
-			util.Prioritized(&Renderer{}, 100),
+			util.Prioritized(&Renderer{LimitWidthDefault: true}, 100),
 		),
 	)
 
